@@ -1,6 +1,7 @@
 package com.talkevents.cassandra.services;
 
 import com.talkevents.cassandra.models.User;
+import com.talkevents.cassandra.repositories.AddressRepository;
 import com.talkevents.cassandra.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -11,42 +12,57 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AddressRepository addressRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, AddressRepository addressRepository) {
         this.userRepository = userRepository;
+        this.addressRepository = addressRepository;
     }
 
-    public List<User> getAll() {
-        return userRepository.findAll();
-    }
+    public User create(User user) {
+        user.setId(UUID.randomUUID());
 
-    public User getById(UUID id) {
-        return userRepository.findById(id).orElse(null);
-    }
-
-    public User save(User user) {
-        if (user.getId() == null) {
-            user.setId(UUID.randomUUID());
+        if (user.getAddressId() != null && !addressRepository.existsById(user.getAddressId())) {
+            throw new RuntimeException("Address not found");
         }
 
         return userRepository.save(user);
     }
 
-    public void update(User user) {
-        var userToUpdate = getById(user.getId());
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
 
-        if (userToUpdate == null) {
-            return;
+    public User findById(UUID id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public User update(UUID id, User user) {
+        User existingUser = userRepository.findById(id).orElse(null);
+
+        if (existingUser == null) {
+            throw new RuntimeException("User not found");
         }
 
-        userToUpdate.setName(user.getName());
-        userToUpdate.setAge(user.getAge());
-        userToUpdate.setEmail(user.getEmail());
+        if (user.getAddressId() != null && !addressRepository.existsById(user.getAddressId())) {
+            throw new RuntimeException("Address not found");
+        }
 
-        userRepository.save(userToUpdate);
+        existingUser.setName(user.getName());
+        existingUser.setAge(user.getAge());
+        existingUser.setEmail(user.getEmail());
+        existingUser.setAddressId(user.getAddressId());
+
+        return userRepository.save(existingUser);
     }
 
     public void delete(UUID id) {
+        User existingUser = userRepository.findById(id).orElse(null);
+
+        if (existingUser == null) {
+            throw new RuntimeException("User not found");
+        }
+
         userRepository.deleteById(id);
     }
 }

@@ -17,24 +17,24 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PostMapping
+    public User create(@RequestBody User user) {
+        return userService.create(user);
+    }
+
     @GetMapping
-    public List<User> getAll() {
-        return userService.getAll();
+    public List<User> findAll() {
+        return userService.findAll();
     }
 
     @GetMapping("/{id}")
-    public User getById(@PathVariable UUID id) {
-        return userService.getById(id);
+    public User findById(@PathVariable UUID id) {
+        return userService.findById(id);
     }
 
-    @PostMapping
-    public User create(@RequestBody User user) {
-        return userService.save(user);
-    }
-
-    @PutMapping
-    public void update(@RequestBody User user) {
-        userService.update(user);
+    @PutMapping("/{id}")
+    public User update(@PathVariable UUID id, @RequestBody User user) {
+        return userService.update(id, user);
     }
 
     @DeleteMapping("/{id}")
